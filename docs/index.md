@@ -3,9 +3,9 @@
 layout: home
 
 hero:
-  name: "nasses "
-  text: "a dsadaffffsdasdad"
-  tagline: My grerrrr2rat project tagline
+  name: "my project"
+  text: "A VitePress Site"
+  tagline: My great project tagline
   actions:
     - theme: brand
       text: Markdown Examples
