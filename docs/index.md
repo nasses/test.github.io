@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  name: "my sdasdadas"
-  text: "a dsadasdasdad"
+  name: "nasses "
+  text: "a dsadaffffsdasdad"
   tagline: My great project tagline
   actions:
     - theme: brand
