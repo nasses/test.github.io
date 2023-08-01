@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "nasses "
   text: "a dsadaffffsdasdad"
-  tagline: My grerrrrrat project tagline
+  tagline: My grerrrr2rat project tagline
   actions:
     - theme: brand
       text: Markdown Examples
