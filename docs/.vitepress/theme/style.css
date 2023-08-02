@@ -1,0 +1,19 @@
+:root {
+    --vp-c-brand: #F06C33;
+    --vp-c-brand-light: #FFCC00;
+    --vp-c-brand-lighter: #FFCC99;
+    --vp-c-brand-dark: #FF9933;
+    --vp-c-brand-darker: #CC6600;
+
+    --vp-custom-block-tip-border: #FFCC99;
+    --vp-custom-block-tip-text: #F06C33;
+}
+
+.vp-doc .custom-block p {
+    font-size: 15px;
+}
+
+.custom-block.tip code {
+    background-color: #f3f3f3;
+    font-weight: 600;
+}
