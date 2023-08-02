@@ -5,7 +5,7 @@ export default defineConfig({
   title: "MyBatis源码分析",
   description: "一个持久层框架",
   themeConfig: {
-	outlineTitle：'章节'
+	outlineTitle：'章节',
 	search: {
       provider: 'local',
 	  options: {
