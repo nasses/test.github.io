@@ -36,7 +36,7 @@ export default defineConfig({
 				{ text: 'XPathParser', link: ''},
 			]},
 		  { text: '解析properties节点', link: ''},
-		  { text: '解析settings节点', , items:[
+		  { text: '解析settings节点', items:[
 				{ text: 'MetaClass', link: ''},
 				{ text: 'ReflectorFactory', link: ''},
 				{ text: 'Reflector', link: ''},
