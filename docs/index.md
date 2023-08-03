@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: 开始学习
-      link: /markdown-examples
+      link: /introduction
     - theme: alt
       text: 快速回顾
-      link: /api-examples
+      link: /review
 
 features:
   - title: ORM

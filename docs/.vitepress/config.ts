@@ -6,6 +6,7 @@ export default defineConfig({
   description: "一个持久层框架",
   themeConfig: {
 	outlineTitle: '章节',
+	outline: 'deep',
 	search: {
       provider: 'local',
       options: {
@@ -64,44 +65,23 @@ export default defineConfig({
       {
         text: '引言',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: '介绍', link: '/introduction'}
         ]
       },
 	  {
 		text: '1.配置文件解析',
+		collapsed: true,
 		items: [
-		  { text: '读取文件', collapsed : true, items:[
-				{ text: 'Resources', link: ''},
-				{ text: 'ClassLoaderWrapper', link: ''},
-				{ text: 'SqlSessionFactoryBuilder', link: ''},
-			]},
-		  { text: '解析xml', collapsed : true, items:[
-				{ text: 'XMLConfigBuilder', link: ''},
-				{ text: 'XMLMapperEntityResolver', link: ''},
-				{ text: 'XPathParser', link: ''},
-			]},
-		  { text: '解析properties节点', link: ''},
-		  { text: '解析settings节点', collapsed : true, items:[
-				{ text: 'MetaClass', link: ''},
-				{ text: 'ReflectorFactory', link: ''},
-				{ text: 'Reflector', link: ''},
-			]},
-		  { text: '解析typeAliases节点', collapsed : true, items:[
-				{ text: 'TypeAliasRegistry', link: ''},
-				{ text: 'ResolverUtil', link: ''},
-				{ text: 'BaseBuilder', link: ''},
-				{ text: 'Configuration', link: ''},
-			]},
-		  { text: '解析plugs节点', link: ''},
-		  { text: '解析environments节点', collapsed : true, items:[
-				{ text: 'Environments', link: ''}
-			]},
-		  { text: '解析typeHandlers节点', collapsed : true, items:[
-				{ text: 'TypeHandlerRegistry', link: ''}
-			]},
-		  { text: '解析objectFactory节点', link: ''},
-		  { text: '解析databaseIdProvider节点', link: ''},
+		  { text: '读取文件', link: '/1/read'},
+		  { text: 'xml', link: '/1/xml'},
+		  { text: 'properties', link: ''},
+		  { text: 'settings', link:''},
+		  { text: 'typeAliases',link:''},
+		  { text: 'plugs', link: ''},
+		  { text: 'environments', link: ''},
+		  { text: 'typeHandlers', link: ''},
+		  { text: 'ojectFactory', link: ''},
+		  { text: 'databaseIdProvider', link: ''},
 		]  
 	  },
 	  {
