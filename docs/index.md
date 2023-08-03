@@ -6,7 +6,7 @@ hero:
   text: "一个 持久层 框架"
   tagline: 源码分析 深入浅出
   image:
-    src: /public/images/logo01.png
+    src: /images/logo01.png
     alt: Nasses
   actions:
     - theme: brand
