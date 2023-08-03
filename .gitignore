@@ -1,4 +1,4 @@
-
+#结尾
 *.jar
 *.war
 *.nar
@@ -6,19 +6,18 @@
 *.zip
 *.tar.gz
 *.rar
-
-cache
-
-target
-logs
-.idea
-.class
+*.class
 *.iml
 *.log
-.logs
-node_modules
-dist
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+
+#文件夹
+cache/
+target/
+logs/
+node_modules/
+dist/
+
+#结尾的文件或目录
+.idea
+.logs
