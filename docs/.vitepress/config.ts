@@ -5,12 +5,13 @@ export default defineConfig({
   title: "MyBatis源码分析",
   description: "一个持久层框架",
   themeConfig: {
-	outlineTitle：'章节',
+	outlineTitle: '章节',
 	search: {
       provider: 'local',
-	  options: {
+      options: {
         locales: {
-          root: { //这里是个大坑，zh是不生效的，改为root即可
+          root: {
+            placeholder: '搜索文档',
             translations: {
               button: {
                 buttonText: '搜索文档',
@@ -51,12 +52,14 @@ export default defineConfig({
             }
           }
         }
-    },
+      }
+	},
+  
     nav: [
       { text: '首页', link: '/' },
       { text: '帮助', link: '/markdown-examples' }
     ],
-
+	
     sidebar: [
       {
         text: '引言',
@@ -184,9 +187,10 @@ export default defineConfig({
 		] 
 	  }
     ],
-
+	
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
     ]
-  }
+  
+  },
 })
