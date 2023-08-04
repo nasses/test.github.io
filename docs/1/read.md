@@ -134,5 +134,3 @@ public class SqlSessionFactoryBuilder {
     }
 }
 ```
-
-<!-- @include: xml.md -->

@@ -5,11 +5,15 @@ export default defineConfig({
   title: "MyBatis源码分析",
   description: "一个持久层框架",
   themeConfig: {
-	outlineTitle: '章节',
+	outlineTitle: '小节',
 	outline: 'deep',
+	
 	search: {
       provider: 'local',
       options: {
+        appId: '...',
+        apiKey: '...',
+        indexName: '...',
         locales: {
           root: {
             placeholder: '搜索文档',
@@ -54,8 +58,8 @@ export default defineConfig({
           }
         }
       }
-	},
-  
+    },
+	
     nav: [
       { text: '首页', link: '/' },
       { text: '帮助', link: '/markdown-examples' }
@@ -70,15 +74,18 @@ export default defineConfig({
       },
 	  {
 		text: '1.配置文件解析',
-		collapsed: true,
+		collapsed : true,
 		items: [
 		  { text: '读取文件', link: '/1/read'},
 		  { text: 'xml', link: '/1/xml'},
-		  { text: 'properties', link: ''},
-		  { text: 'settings', link:''},
-		  { text: 'typeAliases',link:''},
-		  { text: 'plugs', link: ''},
-		  { text: 'environments', link: ''},
+		  { text: 'properties', link: '/1/properties'},
+		  { text: 'settings', link:'/1/settings'},
+		  { text: 'typeAliases',link:'/1/typealiases'},
+		  { text: 'plugs', link: '/1/plugs'},
+		  { text: 'objectFactory',link:'/1/objectfactory'},
+		  { text: '💥💥reflectorFactory',link:'/1/reflectorfactory'},
+		  { text: 'environments', link: '/1/environments'},
+		  { text: '事务', link: '/1/transaction'},
 		  { text: 'typeHandlers', link: ''},
 		  { text: 'ojectFactory', link: ''},
 		  { text: 'databaseIdProvider', link: ''},
