@@ -74,7 +74,7 @@ export default defineConfig({
       },
 	  {
 		text: '1.配置文件解析',
-		collapsed : true,
+		collapsed : false,
 		items: [
 		  { text: '读取文件', link: '/1/read'},
 		  { text: 'xml', link: '/1/xml'},
@@ -93,21 +93,13 @@ export default defineConfig({
 	  },
 	  {
 		 text: '2.映射器',
+		 collapsed : false,
 		 items: [
-		  { text: '解析mappers节点', collapsed : true, items:[
-				{ text: 'MetaObject', link: ''}
-			]},
+		  { text: '解析mappers节点', link: ''},
 		  { text: '解析cache节点', link: ''},
 		  { text: '解析cache-ref节点', link: ''},
 		  { text: '解析parameterMap节点', link: ''},
-		  { text: '解析resultMap节点', collapsed : true, items:[
-				{ text: 'association', link: ''},
-				{ text: 'constructor', link: ''},
-				{ text: 'discriminator', link: ''},
-				{ text: 'extend', link: ''},
-				{ text: 'ResultMapping', link: ''},
-				{ text: 'ResultMapp', link: ''},
-			]},
+		  { text: '解析resultMap节点', link: ''},
 		  { text: '解析sql节点', link: ''},
 		  { text: '解析select|insert|update|delete节点', collapsed : true, items:[
 				{ text: '解析include节点', link: ''},
