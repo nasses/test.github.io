@@ -232,5 +232,143 @@ public class Reflector {//缓存了一个类的各种信息
             }
         }
     }
+
+	private void addFields(Class<?> clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        for(int i = 0; i < fields.length; ++i) {
+            Field field = fields[i];
+            if (!this.setMethods.containsKey(field.getName())) {//get
+                int modifiers = field.getModifiers();
+                if (!Modifier.isFinal(modifiers) || !Modifier.isStatic(modifiers)) {
+                    this.addSetField(field);
+                }
+            }
+            if (!this.getMethods.containsKey(field.getName())) {//set
+                this.addGetField(field);
+            }
+        }
+        if (clazz.getSuperclass() != null) {
+            this.addFields(clazz.getSuperclass());//属性超类
+        }
+    }
+
+    private void addSetField(Field field) {
+        if (this.isValidPropertyName(field.getName())) {
+            this.setMethods.put(field.getName(), new SetFieldInvoker(field));
+            Type fieldType = TypeParameterResolver.resolveFieldType(field, this.type);
+            this.setTypes.put(field.getName(), this.typeToClass(fieldType));
+        }
+    }
+
+    private void addGetField(Field field) {
+        if (this.isValidPropertyName(field.getName())) {
+            this.getMethods.put(field.getName(), new GetFieldInvoker(field));
+            Type fieldType = TypeParameterResolver.resolveFieldType(field, this.type);
+            this.getTypes.put(field.getName(), this.typeToClass(fieldType));
+        }
+    }
+
+}
+```
+
+### Invoker
+```java
+public interface Invoker {
+    Object invoke(Object target, Object[] args) throws IllegalAccessException, InvocationTargetException;
+
+    Class<?> getType();
+}
+```
+
+### MethodInvoker
+```java
+public class MethodInvoker implements Invoker {
+    private final Class<?> type;
+    private final Method method;
+
+    public MethodInvoker(Method method) {
+        this.method = method;
+        if (method.getParameterTypes().length == 1) {//一个参数则代表参数
+            this.type = method.getParameterTypes()[0];
+        } else {
+            this.type = method.getReturnType();//否则代表返回
+        }
+
+    }
+
+    public Object invoke(Object target, Object[] args) throws IllegalAccessException, InvocationTargetException {
+        try {
+            return this.method.invoke(target, args);
+        } catch (IllegalAccessException e) {
+            if (Reflector.canControlMemberAccessible()) {
+                this.method.setAccessible(true);
+                return this.method.invoke(target, args);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public Class<?> getType() {
+        return this.type;
+    }
+}
+```
+
+### GetFieldInvoker
+```java
+public class GetFieldInvoker implements Invoker {
+    private final Field field;
+
+    public GetFieldInvoker(Field field) {
+        this.field = field;
+    }
+
+    public Object invoke(Object target, Object[] args) throws IllegalAccessException {
+        try {
+            return this.field.get(target);//[!code focus]
+        } catch (IllegalAccessException e) {
+            if (Reflector.canControlMemberAccessible()) {
+                this.field.setAccessible(true);
+                return this.field.get(target);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public Class<?> getType() {
+        return this.field.getType();
+    }
+}
+```
+
+### SetFieldInvoker
+```java
+public class SetFieldInvoker implements Invoker {
+    private final Field field;
+
+    public SetFieldInvoker(Field field) {
+        this.field = field;
+    }
+
+    public Object invoke(Object target, Object[] args) throws IllegalAccessException {
+        try {
+            this.field.set(target, args[0]);//[!code focus]
+        } catch (IllegalAccessException e) {
+            if (!Reflector.canControlMemberAccessible()) {
+                throw e;
+            }
+
+            this.field.setAccessible(true);
+            this.field.set(target, args[0]);
+        }
+
+        return null;
+    }
+
+    public Class<?> getType() {
+        return this.field.getType();
+    }
 }
 ```

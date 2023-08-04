@@ -67,4 +67,4 @@ MyBatis允许拦截下面接口中的一些方法：
 - ResultSetHandler: `handleResultSets`，`handleOutputParameters` 
 - StatementHandler: `prepare`，`parameterize`，`batch`，`update`，`query`
 
-详细阅读第六章[!插件机制]()
+详细阅读第六章 插件机制
