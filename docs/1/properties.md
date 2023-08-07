@@ -1,4 +1,4 @@
-### 解析properties节点
+# 解析properties节点
 
 > ### SqlSessionFactoryBuilder-build
 ```java

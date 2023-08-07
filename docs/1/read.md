@@ -1,5 +1,5 @@
 
-### 读取配置文件
+# 读取配置文件
 
 ```java
 String resource = "chapter01/mybatis-config.xml";

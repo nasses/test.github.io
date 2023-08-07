@@ -1,4 +1,4 @@
-### 解析typeAliases节点
+# 解析typeAliases节点
 ```java
 private void parseConfiguration(XNode root) {
     try {

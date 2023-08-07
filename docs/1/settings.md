@@ -1,4 +1,4 @@
-### 解析settings
+# 解析settings
 
 > ### XMLConfigBuilder
 ```java
@@ -192,7 +192,8 @@ public class TypeAliasRegistry {//通过别名获取类  // [!code focus]
 	
 ```java
 public class ResolverUtil<T> {//通过虚拟文件系统从.class里查找符合条件的类
-    
+	private Set<Class<? extends T>> matches = new HashSet();    
+
     public ResolverUtil<T> find(Test test, String packageName) {//使用一个接口Test,和内部实现类IsA
         String path = this.getPackagePath(packageName);
         try {
@@ -214,7 +215,7 @@ public class ResolverUtil<T> {//通过虚拟文件系统从.class里查找符合
 
     protected void addIfMatching(Test test, String classFilePath) {
         try {
-            String externalName = classFilePath.substring(0, classFilePath.indexOf(46)).replace('/', '.');
+            String externalName = classFilePath.substring(0, classFilePath.indexOf('.')).replace('/', '.');
             ClassLoader loader = this.getClassLoader();
             if (log.isDebugEnabled()) {
                 log.debug("...");
@@ -226,6 +227,10 @@ public class ResolverUtil<T> {//通过虚拟文件系统从.class里查找符合
         } catch (Throwable throw) {
             log.warn("...");
         }
+    }
+
+	public Set<Class<? extends T>> getClasses() {
+        return this.matches;
     }
 }
 ```
