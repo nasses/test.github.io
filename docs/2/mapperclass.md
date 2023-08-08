@@ -73,7 +73,21 @@ private void loadXmlResource() {
     }
 }
 ```
-### parseCache
+### @CacheNamespace
+```java
+@CacheNamespace(implementation = PerpetualCache.class, eviction = LruCache.class, flushInterval = 6000, size = 1024, readWrite = true, blocking = false)
+public interface ArticleMapper {
+
+}
+```
+为给定的命名空间（比如类）配置缓存。
+- `implementation`缓存的实现类
+- `eviction` 缓存的淘汰策略
+- `flushInterval` 刷新的秒数
+- `size` 缓存的大小
+- `readWrite` true会给所有调用者返回缓存的相同实例,false则会通过序列化返回缓存对象的拷贝,速度慢但更安全
+- `blocking` true时会给缓存的get/set方法加锁
+
 ```java
 private void parseCache() {
     CacheNamespace cacheDomain = (CacheNamespace)this.type.getAnnotation(CacheNamespace.class);//@CacheNamespace注解
@@ -127,16 +141,16 @@ private void parseCacheRef() {
 ```java
 void parseStatement(Method method) {
     Class<?> parameterTypeClass = this.getParameterType(method);//入参
-    LanguageDriver languageDriver = this.getLanguageDriver(method);//@Lang注解
-    SqlSource sqlSource = this.getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
+    LanguageDriver languageDriver = this.getLanguageDriver(method);//@Lang注解 默认XMLLanguageDriver
+    SqlSource sqlSource = this.getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);//获取sql //[!code hl]
     if (sqlSource != null) {
-        Options options = (Options)method.getAnnotation(Options.class);
+        Options options = (Options)method.getAnnotation(Options.class);//相关配置
         String mappedStatementId = this.type.getName() + "." + method.getName();
         Integer fetchSize = null;
         Integer timeout = null;
         StatementType statementType = StatementType.PREPARED;
         ResultSetType resultSetType = null;
-        SqlCommandType sqlCommandType = this.getSqlCommandType(method);
+        SqlCommandType sqlCommandType = this.getSqlCommandType(method);//sql类型
         boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
         boolean flushCache = !isSelect;
         boolean useCache = isSelect;
@@ -144,45 +158,141 @@ void parseStatement(Method method) {
         String keyColumn = null;
         Object keyGenerator;
         if (!SqlCommandType.INSERT.equals(sqlCommandType) && !SqlCommandType.UPDATE.equals(sqlCommandType)) {
-            keyGenerator = NoKeyGenerator.INSTANCE;
+            keyGenerator = NoKeyGenerator.INSTANCE;//不用生成主键
         } else {
-            SelectKey selectKey = (SelectKey)method.getAnnotation(SelectKey.class);
+            SelectKey selectKey = (SelectKey)method.getAnnotation(SelectKey.class);//查询数据库自增主键注解，有些库不能有两个select语句，注解支持
             if (selectKey != null) {
                 keyGenerator = this.handleSelectKeyAnnotation(selectKey, mappedStatementId, this.getParameterType(method), languageDriver);
                 keyProperty = selectKey.keyProperty();
             } else if (options == null) {
-                keyGenerator = this.configuration.isUseGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
+                keyGenerator = this.configuration.isUseGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;//是否配置了全局主键生成器
             } else {
                 keyGenerator = options.useGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
                 keyProperty = options.keyProperty();
                 keyColumn = options.keyColumn();
             }
         }
-
         if (options != null) {
             if (FlushCachePolicy.TRUE.equals(options.flushCache())) {
                 flushCache = true;
             } else if (FlushCachePolicy.FALSE.equals(options.flushCache())) {
                 flushCache = false;
             }
-
             useCache = options.useCache();
-            fetchSize = options.fetchSize() <= -1 && options.fetchSize() != -2147483648 ? null : options.fetchSize();
+            fetchSize = options.fetchSize() <= -1 && options.fetchSize() != Integer.MIN_VALUE ? null : options.fetchSize();
             timeout = options.timeout() > -1 ? options.timeout() : null;
             statementType = options.statementType();
             resultSetType = options.resultSetType();
         }
-
         String resultMapId = null;
         ResultMap resultMapAnnotation = (ResultMap)method.getAnnotation(ResultMap.class);
         if (resultMapAnnotation != null) {
             resultMapId = String.join(",", resultMapAnnotation.value());
         } else if (isSelect) {
-            resultMapId = this.parseResultMap(method);
+            resultMapId = this.parseResultMap(method);//解析resultMap //[!code hl]
         }
-
-        this.assistant.addMappedStatement(mappedStatementId, sqlSource, statementType, sqlCommandType, fetchSize, timeout, (String)null, parameterTypeClass, resultMapId, this.getReturnType(method), resultSetType, flushCache, useCache, false, (KeyGenerator)keyGenerator, keyProperty, keyColumn, (String)null, languageDriver, options != null ? this.nullOrEmpty(options.resultSets()) : null);
+        this.assistant.addMappedStatement(mappedStatementId, sqlSource, statementType, sqlCommandType, fetchSize, timeout, (String)null, parameterTypeClass, resultMapId, this.getReturnType(method), resultSetType, flushCache, useCache, false, (KeyGenerator)keyGenerator, keyProperty, keyColumn, (String)null, languageDriver, options != null ? this.nullOrEmpty(options.resultSets()) : null);//添加
     }
 
+}
+```
+
+### getParameterType
+```java
+private Class<?> getParameterType(Method method) {
+    Class<?> parameterType = null;//没有参数返回null
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    for(int i = 0; i < parameterTypes.length; ++i) {
+        Class<?> currentParameterType = parameterTypes[i];
+		//除了这两种返回，都会认为参数类型是ParamMap
+        if (!RowBounds.class.isAssignableFrom(currentParameterType) && !ResultHandler.class.isAssignableFrom(currentParameterType)) {//[!code hl]
+            if (parameterType == null) {
+                parameterType = currentParameterType;//参数只有一个的情况
+            } else {
+                parameterType = ParamMap.class;//多个参数都的情况都使用ParamMap //[!code hl]
+            }
+        }
+    }
+    return parameterType;
+}
+```
+### getSqlSourceFromAnnotations
+```java
+private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
+    try {
+        Class<? extends Annotation> sqlAnnotationType = this.getSqlAnnotationType(method);
+        Class<? extends Annotation> sqlProviderAnnotationType = this.getSqlProviderAnnotationType(method);
+        Annotation sqlProviderAnnotation;
+        if (sqlAnnotationType != null) {
+            if (sqlProviderAnnotationType != null) {//sql 和 sqlprovider 不能同时使用
+                throw new BindingException("...");
+            } else {
+                sqlProviderAnnotation = method.getAnnotation(sqlAnnotationType);
+                String[] strings = (String[])sqlProviderAnnotation.getClass().getMethod("value").invoke(sqlProviderAnnotation);
+                return this.buildSqlSourceFromStrings(strings, parameterType, languageDriver);//构建sql
+            }
+        } else if (sqlProviderAnnotationType != null) {
+            sqlProviderAnnotation = method.getAnnotation(sqlProviderAnnotationType);
+            return new ProviderSqlSource(this.assistant.getConfiguration(), sqlProviderAnnotation, this.type, method);//构建 providerSql
+        } else {
+            return null;
+        }
+    } catch (Exception e) {
+        throw new BuilderException("...");
+    }
+}
+```
+
+### buildSqlSourceFromStrings
+```java
+private SqlSource buildSqlSourceFromStrings(String[] strings, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    StringBuilder sql = new StringBuilder();
+    for(int i = 0; i < strings.length; ++i) {
+        sql.append(strings[i]);//@sql中的value，实际可以用,分隔多个sql
+        sql.append(" ");
+    }
+    return languageDriver.createSqlSource(this.configuration, sql.toString().trim(), parameterTypeClass);
+}
+```
+
+### handleSelectKeyAnnotation
+```java
+private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, String baseStatementId, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    String id = baseStatementId + "!selectKey";
+    Class<?> resultTypeClass = selectKeyAnnotation.resultType();
+    StatementType statementType = selectKeyAnnotation.statementType();
+    String keyProperty = selectKeyAnnotation.keyProperty();
+    String keyColumn = selectKeyAnnotation.keyColumn();
+    boolean executeBefore = selectKeyAnnotation.before();
+    boolean useCache = false;
+    KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
+    Integer fetchSize = null;
+    Integer timeout = null;
+    boolean flushCache = false;
+    String parameterMap = null;
+    String resultMap = null;
+    ResultSetType resultSetTypeEnum = null;
+    SqlSource sqlSource = this.buildSqlSourceFromStrings(selectKeyAnnotation.statement(), parameterTypeClass, languageDriver);
+    SqlCommandType sqlCommandType = SqlCommandType.SELECT;
+    this.assistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType, (Integer)fetchSize, (Integer)timeout, (String)parameterMap, parameterTypeClass, (String)resultMap, resultTypeClass, (ResultSetType)resultSetTypeEnum, flushCache, useCache, false, keyGenerator, keyProperty, keyColumn, (String)null, languageDriver, (String)null);
+    id = this.assistant.applyCurrentNamespace(id, false);
+    MappedStatement keyStatement = this.configuration.getMappedStatement(id, false);
+    SelectKeyGenerator answer = new SelectKeyGenerator(keyStatement, executeBefore);
+    this.configuration.addKeyGenerator(id, answer);
+    return answer;
+}
+
+```
+
+### parseResultMap
+```java
+private String parseResultMap(Method method) {
+    Class<?> returnType = this.getReturnType(method);
+    ConstructorArgs args = (ConstructorArgs)method.getAnnotation(ConstructorArgs.class);//参数传递给结果对象的构造方法
+    Results results = (Results)method.getAnnotation(Results.class);
+    TypeDiscriminator typeDiscriminator = (TypeDiscriminator)method.getAnnotation(TypeDiscriminator.class);
+    String resultMapId = this.generateResultMapName(method);
+    this.applyResultMap(resultMapId, returnType, this.argsIf(args), this.resultsIf(results), typeDiscriminator);
+    return resultMapId;
 }
 ```
