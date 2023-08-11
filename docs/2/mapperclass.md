@@ -20,6 +20,7 @@ public class MapperAnnotationBuilder {
         SQL_PROVIDER_ANNOTATION_TYPES.add(DeleteProvider.class);
     }
 
+	//MapperRegistry创建
 	public MapperAnnotationBuilder(Configuration configuration, Class<?> type) {
         String resource = type.getName().replace('.', '/') + ".java (best guess)";
         this.assistant = new MapperBuilderAssistant(configuration, resource);
@@ -114,7 +115,10 @@ private Properties convertToProperties(Property[] properties) {
 }
 ```
 
-### parseCacheRef
+### @CacheNamespaceRef
+
+二级缓存根据命名空间配置参照缓存
+
 ```java 
 private void parseCacheRef() {
     CacheNamespaceRef cacheDomainRef = (CacheNamespaceRef)this.type.getAnnotation(CacheNamespaceRef.class);//@CacheNamespaceRef注解
@@ -216,11 +220,13 @@ private Class<?> getParameterType(Method method) {
     return parameterType;
 }
 ```
-### getSqlSourceFromAnnotations
+### @Select @Insert @Update @Delete 
 ```java
 private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
     try {
+		//@Select @Insert @Update @Delete 
         Class<? extends Annotation> sqlAnnotationType = this.getSqlAnnotationType(method);
+		//@SelectProvider @InsertProvider @UpdateProvider @DeleteProvider
         Class<? extends Annotation> sqlProviderAnnotationType = this.getSqlProviderAnnotationType(method);
         Annotation sqlProviderAnnotation;
         if (sqlAnnotationType != null) {
@@ -255,7 +261,7 @@ private SqlSource buildSqlSourceFromStrings(String[] strings, Class<?> parameter
 }
 ```
 
-### handleSelectKeyAnnotation
+### @SelectKey
 ```java
 private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, String baseStatementId, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
     String id = baseStatementId + "!selectKey";
@@ -274,8 +280,8 @@ private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, St
     ResultSetType resultSetTypeEnum = null;
     SqlSource sqlSource = this.buildSqlSourceFromStrings(selectKeyAnnotation.statement(), parameterTypeClass, languageDriver);
     SqlCommandType sqlCommandType = SqlCommandType.SELECT;
-    this.assistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType, (Integer)fetchSize, (Integer)timeout, (String)parameterMap, parameterTypeClass, (String)resultMap, resultTypeClass, (ResultSetType)resultSetTypeEnum, flushCache, useCache, false, keyGenerator, keyProperty, keyColumn, (String)null, languageDriver, (String)null);
-    id = this.assistant.applyCurrentNamespace(id, false);
+    this.assistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType, (Integer)fetchSize, (Integer)timeout, (String)parameterMap, parameterTypeClass, (String)resultMap, resultTypeClass, (ResultSetType)resultSetTypeEnum, flushCache, useCache, false, keyGenerator, keyProperty, keyColumn, (String)null, languageDriver, (String)null);//里面id也会添加namespace 
+    id = this.assistant.applyCurrentNamespace(id, false);//添加namespace 
     MappedStatement keyStatement = this.configuration.getMappedStatement(id, false);
     SelectKeyGenerator answer = new SelectKeyGenerator(keyStatement, executeBefore);
     this.configuration.addKeyGenerator(id, answer);
@@ -284,7 +290,7 @@ private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, St
 
 ```
 
-### parseResultMap
+### @ResultMap
 ```java
 private String parseResultMap(Method method) {
     Class<?> returnType = this.getReturnType(method);
@@ -294,5 +300,129 @@ private String parseResultMap(Method method) {
     String resultMapId = this.generateResultMapName(method);
     this.applyResultMap(resultMapId, returnType, this.argsIf(args), this.resultsIf(results), typeDiscriminator);
     return resultMapId;
+}
+```
+
+### generateResultMapName
+```java
+private String generateResultMapName(Method method) {
+    Results results = (Results)method.getAnnotation(Results.class);
+    if (results != null && !results.id().isEmpty()) {
+        return this.type.getName() + "." + results.id();
+    } else {
+        StringBuilder suffix = new StringBuilder();
+        Class[] clazzs = method.getParameterTypes();
+        for(int i = 0; i < clazz.length; ++i) {
+            Class<?> c = clazzs[i];
+            suffix.append("-");
+            suffix.append(c.getSimpleName());
+        }
+        if (suffix.length() < 1) {
+            suffix.append("-void");
+        }
+        return this.type.getName() + "." + method.getName() + suffix;
+    }
+}
+```
+
+### applyResultMap
+```java
+private void applyResultMap(String resultMapId, Class<?> returnType, Arg[] args, Result[] results, TypeDiscriminator discriminator) {
+    List<ResultMapping> resultMappings = new ArrayList();
+    this.applyConstructorArgs(args, returnType, resultMappings);
+    this.applyResults(results, returnType, resultMappings);
+    Discriminator disc = this.applyDiscriminator(resultMapId, returnType, discriminator);
+    this.assistant.addResultMap(resultMapId, returnType, (String)null, disc, resultMappings, (Boolean)null);
+    this.createDiscriminatorResultMaps(resultMapId, returnType, discriminator);
+}
+```
+
+### applyConstructorArgs
+```java
+private void applyConstructorArgs(Arg[] args, Class<?> resultType, List<ResultMapping> resultMappings) {]
+    for(int i = 0; i < args.length; ++i) {
+        Arg arg = args[i];
+        List<ResultFlag> flags = new ArrayList();
+        flags.add(ResultFlag.CONSTRUCTOR);
+        if (arg.id()) {//是否有Id
+            flags.add(ResultFlag.ID);
+        }
+        Class<? extends TypeHandler<?>> typeHandler = arg.typeHandler() == UnknownTypeHandler.class ? null : arg.typeHandler();
+		//构造resultMap
+        ResultMapping resultMapping = this.assistant.buildResultMapping(resultType, this.nullOrEmpty(arg.name()), this.nullOrEmpty(arg.column()), arg.javaType() == Void.TYPE ? null : arg.javaType(), arg.jdbcType() == JdbcType.UNDEFINED ? null : arg.jdbcType(), this.nullOrEmpty(arg.select()), this.nullOrEmpty(arg.resultMap()), (String)null, this.nullOrEmpty(arg.columnPrefix()), typeHandler, flags, (String)null, (String)null, false);
+        resultMappings.add(resultMapping);
+    }
+}
+```
+
+### applyResults
+```java
+private void applyResults(Result[] results, Class<?> resultType, List<ResultMapping> resultMappings) {
+    for(int i = 0; i < results.length; ++i) {
+        Result result = results[i];
+        List<ResultFlag> flags = new ArrayList();
+        if (result.id()) {
+            flags.add(ResultFlag.ID);
+        }
+
+        Class<? extends TypeHandler<?>> typeHandler = result.typeHandler() == UnknownTypeHandler.class ? null : result.typeHandler();
+		//构建resultMap
+        ResultMapping resultMapping = this.assistant.buildResultMapping(resultType, this.nullOrEmpty(result.property()), this.nullOrEmpty(result.column()), result.javaType() == Void.TYPE ? null : result.javaType(), result.jdbcType() == JdbcType.UNDEFINED ? null : result.jdbcType(), this.hasNestedSelect(result) ? this.nestedSelectId(result) : null, (String)null, (String)null, (String)null, typeHandler, flags, (String)null, (String)null, this.isLazy(result));
+        resultMappings.add(resultMapping);
+    }
+}
+```
+
+### applyDiscriminator
+```java
+private Discriminator applyDiscriminator(String resultMapId, Class<?> resultType, TypeDiscriminator discriminator) {
+    if (discriminator == null) {//鉴别器
+        return null;
+    } else {
+        String column = discriminator.column();
+        Class<?> javaType = discriminator.javaType() == Void.TYPE ? String.class : discriminator.javaType();
+        JdbcType jdbcType = discriminator.jdbcType() == JdbcType.UNDEFINED ? null : discriminator.jdbcType();
+        Class<? extends TypeHandler<?>> typeHandler = discriminator.typeHandler() == UnknownTypeHandler.class ? null : discriminator.typeHandler();
+        Case[] cases = discriminator.cases();
+        Map<String, String> discriminatorMap = new HashMap();
+        for(Case c : cases) {
+            String value = c.value();
+            String caseResultMapId = resultMapId + "-" + value;
+            discriminatorMap.put(value, caseResultMapId);
+        }
+        return this.assistant.buildDiscriminator(resultType, column, javaType, jdbcType, typeHandler, discriminatorMap);
+    }
+}
+```
+
+### createDiscriminatorResultMaps
+```java
+private void createDiscriminatorResultMaps(String resultMapId, Class<?> resultType, TypeDiscriminator discriminator) {
+    if (discriminator != null) {
+		Case[] cases = discriminator.cases();
+        for(Case c: cases) {、
+            String caseResultMapId = resultMapId + "-" + c.value();
+            List<ResultMapping> resultMappings = new ArrayList();
+            this.applyConstructorArgs(c.constructArgs(), resultType, resultMappings);
+            this.applyResults(c.results(), resultType, resultMappings);
+            this.assistant.addResultMap(caseResultMapId, c.type(), resultMapId, (Discriminator)null, resultMappings, (Boolean)null);
+        }
+    }
+}
+```
+
+### @Result
+```java
+private void applyResults(Result[] results, Class<?> resultType, List<ResultMapping> resultMappings) {
+    for(int i = 0; i < results.length; ++i) {
+        Result result = results[i];
+        List<ResultFlag> flags = new ArrayList();
+        if (result.id()) {
+            flags.add(ResultFlag.ID);
+        }
+        Class<? extends TypeHandler<?>> typeHandler = result.typeHandler() == UnknownTypeHandler.class ? null : result.typeHandler();
+        ResultMapping resultMapping = this.assistant.buildResultMapping(resultType, this.nullOrEmpty(result.property()), this.nullOrEmpty(result.column()), result.javaType() == Void.TYPE ? null : result.javaType(), result.jdbcType() == JdbcType.UNDEFINED ? null : result.jdbcType(), this.hasNestedSelect(result) ? this.nestedSelectId(result) : null, (String)null, (String)null, (String)null, typeHandler, flags, (String)null, (String)null, this.isLazy(result));
+        resultMappings.add(resultMapping);
+    }
 }
 ```

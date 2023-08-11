@@ -3,7 +3,7 @@
 >XPathParser(使用javax.xml.xpath.XPath解析xml文件并记录在XNode, XMLMapperEntityResolver实现了org.xml.sax.EntityResolver, 通过读取dtd来获取xml的解析规则) -> 
 
 
-### 🎯XMLConfigBuilder
+### XMLConfigBuilder
 
 ```java
 public class XMLConfigBuilder extends BaseBuilder {//需要XPathParser 

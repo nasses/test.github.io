@@ -94,7 +94,7 @@ export default defineConfig({
 		 collapsed : false,
 		 items: [
 		  { text: 'mapper注解类解析', link: '/2/mapperclass'},
-		  { text: '解析mappers节点', link: ''},
+		  { text: 'MapperBuilderAssistant', link: '/2/mapperbuilderassistant'},
 		  { text: '解析cache节点', link: ''},
 		  { text: '解析cache-ref节点', link: ''},
 		  { text: '解析parameterMap节点', link: ''},
