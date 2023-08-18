@@ -11,7 +11,8 @@
 
 ### BaseBuilder
 ```java
-protected final Configuration configuration;
+public abstract class BaseBuilder {
+	protected final Configuration configuration;
     protected final TypeAliasRegistry typeAliasRegistry;
     protected final TypeHandlerRegistry typeHandlerRegistry;
 
@@ -322,7 +323,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         return javaType;
     }
 	
-	//
+	//私有方法 查找参数具体类 XML使用
     private Class<?> resolveParameterJavaType(Class<?> resultType, String property, Class<?> javaType, JdbcType jdbcType) {
         if (javaType == null) {
             if (JdbcType.CURSOR.equals(jdbcType)) {
@@ -340,11 +341,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
         return javaType;
     }
 
+	//构建resultMapping
     public ResultMapping buildResultMapping(Class<?> resultType, String property, String column, Class<?> javaType, JdbcType jdbcType, String nestedSelect, String nestedResultMap, String notNullColumn, String columnPrefix, Class<? extends TypeHandler<?>> typeHandler, List<ResultFlag> flags) {
         return this.buildResultMapping(resultType, property, column, javaType, jdbcType, nestedSelect, nestedResultMap, notNullColumn, columnPrefix, typeHandler, flags, (String)null, (String)null, this.configuration.isLazyLoadingEnabled());
     }
 
-
+	//添加单个 sql statement
     public MappedStatement addMappedStatement(String id, SqlSource sqlSource, StatementType statementType, SqlCommandType sqlCommandType, Integer fetchSize, Integer timeout, String parameterMap, Class<?> parameterType, String resultMap, Class<?> resultType, ResultSetType resultSetType, boolean flushCache, boolean useCache, boolean resultOrdered, KeyGenerator keyGenerator, String keyProperty, String keyColumn, String databaseId, LanguageDriver lang) {
         return this.addMappedStatement(id, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterMap, parameterType, resultMap, resultType, resultSetType, flushCache, useCache, resultOrdered, keyGenerator, keyProperty, keyColumn, databaseId, lang, (String)null);
     }

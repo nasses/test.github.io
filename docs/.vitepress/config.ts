@@ -95,9 +95,9 @@ export default defineConfig({
 		 items: [
 		  { text: 'mapper注解类解析', link: '/2/mapperclass'},
 		  { text: 'MapperBuilderAssistant', link: '/2/mapperbuilderassistant'},
-		  { text: '解析cache节点', link: ''},
-		  { text: '解析cache-ref节点', link: ''},
-		  { text: '解析parameterMap节点', link: ''},
+		  { text: 'XMLMapperBuilder', link: '/2/xmlmapperbuilder'},
+		  { text: 'XMLStatementBuilder', link: '/2/xmlstatementbuilder'},
+		  { text: 'LanguageDriver', link: '/2/languagedriver'},
 		  { text: '解析resultMap节点', link: ''},
 		  { text: '解析sql节点', link: ''},
 		  { text: '解析select|insert|update|delete节点', link:''},

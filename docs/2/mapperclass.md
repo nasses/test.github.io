@@ -44,7 +44,7 @@ public class MapperAnnotationBuilder {
                         this.parseStatement(method);//解析 sql
                     }
                 } catch (IncompleteElementException e) {
-                    this.configuration.addIncompleteMethod(new MethodResolver(this, method));//未解析完的，涉及到级联引用
+                    this.configuration.addIncompleteMethod(new MethodResolver(this, method));//未解析完的，涉及到级联引用 以方法为维度
                 }
             }
         }
